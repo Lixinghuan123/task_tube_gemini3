@@ -1,0 +1,5 @@
+{
+  "name": "TubeTasker",
+  "description": "A visual task management app using a chemistry test-tube metaphor. Built with React and TypeScript for robust logic, and Framer Motion for fluid physics-based interactions.",
+  "requestFramePermissions": []
+}
