@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [modalMode, setModalMode] = useState<ModalMode>('closed');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
+  const [activeTube, setActiveTube] = useState<'todo' | 'done' | null>(null);
   
   // Refs for collision detection
   const todoTubeRef = useRef<HTMLDivElement>(null);
@@ -48,7 +49,12 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDragStart = (task: Task) => {
+    setActiveTube(task.status);
+  };
+
   const handleDragRelease = (task: Task, point: { x: number, y: number }) => {
+    setActiveTube(null);
     const todoRect = todoTubeRef.current?.getBoundingClientRect();
     const doneRect = doneTubeRef.current?.getBoundingClientRect();
 
@@ -81,28 +87,28 @@ const App: React.FC = () => {
         <p className="text-slate-400 font-medium mt-2">Drag bubbles to complete tasks!</p>
       </header>
 
-      {/* --- CREATE BALL --- */}
-      <div className="relative z-30 h-24 flex items-center justify-center">
-        <motion.button
-          layoutId="create-ball"
-          whileHover={{ scale: 1.1, rotate: 10 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => { 
-            setEditingTask(undefined);
-            setModalMode('create'); 
-          }}
-          className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-b from-white to-slate-100 shadow-[0_10px_25px_rgba(0,0,0,0.1)] flex items-center justify-center text-3xl md:text-4xl cursor-pointer ring-4 ring-white/50 relative group text-slate-700"
-        >
-           <div className="absolute top-2 left-4 w-4 h-3 bg-white rounded-full blur-[1px]" />
-           ➕
-          <div className="absolute -bottom-10 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-slate-500 whitespace-nowrap bg-white/80 px-3 py-1 rounded-full shadow-sm pointer-events-none">
-            New Task
-          </div>
-        </motion.button>
-      </div>
-
       {/* --- TUBE 1: TO DO --- */}
-      <div className="relative z-20 w-full max-w-3xl flex flex-col gap-3">
+      <div className="relative w-full max-w-3xl flex flex-col gap-3" style={{ zIndex: activeTube === 'todo' ? 9998 : 5 }}>
+        {/* CREATE BALL - positioned above the todo tube */}
+        <div className="relative z-[100] h-20 flex items-center justify-center -mb-2">
+          <motion.button
+            layoutId="create-ball"
+            whileHover={{ scale: 1.1, rotate: 10 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { 
+              setEditingTask(undefined);
+              setModalMode('create'); 
+            }}
+            className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-b from-white to-slate-100 shadow-[0_10px_25px_rgba(0,0,0,0.1)] flex items-center justify-center text-3xl md:text-4xl cursor-pointer ring-4 ring-white/50 relative group text-slate-700"
+          >
+            <div className="absolute top-2 left-4 w-4 h-3 bg-white rounded-full blur-[1px]" />
+            ➕
+            <div className="absolute -bottom-10 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold text-slate-500 whitespace-nowrap bg-white/80 px-3 py-1 rounded-full shadow-sm pointer-events-none">
+              New Task
+            </div>
+          </motion.button>
+        </div>
+
         <div className="flex items-center gap-3 px-6">
            <div className="w-3 h-3 rounded-full bg-blue-400"></div>
            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Waiting Area</span>
@@ -114,11 +120,11 @@ const App: React.FC = () => {
           The 'scroll-container' is taller (h-40) but pulled back with negative margins (-my-6).
           This allows the ball to move partially vertically outside the "visual" tube without getting clipped immediately.
         */}
-        <div className="relative w-full h-28 md:h-32">
+        <div className="relative w-full h-28 md:h-32 overflow-visible">
           {/* Visual Glass Tube */}
           <div 
             ref={todoTubeRef}
-            className="absolute inset-0 w-full h-full bg-white/40 backdrop-blur-xl border border-white/60 rounded-[60px] shadow-sm z-0"
+            className="absolute inset-0 w-full h-full bg-white/40 backdrop-blur-xl border border-white/60 rounded-[60px] shadow-sm z-0 overflow-hidden"
           ></div>
 
           {/* Interaction/Scroll Layer - Taller to prevent immediate clipping */}
@@ -135,6 +141,7 @@ const App: React.FC = () => {
                       setModalMode('edit');
                     }}
                     onLongPress={() => handleDeleteTask(task.id)}
+                    onDragStart={handleDragStart}
                     onDragRelease={handleDragRelease}
                   />
                 ))}
@@ -153,17 +160,17 @@ const App: React.FC = () => {
       </div>
 
       {/* --- TUBE 2: DONE --- */}
-      <div className="relative z-10 w-full max-w-3xl flex flex-col gap-3">
+      <div className="relative w-full max-w-3xl flex flex-col gap-3" style={{ zIndex: activeTube === 'done' ? 9998 : 5 }}>
         <div className="flex items-center gap-3 px-6">
            <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Completed</span>
         </div>
 
-        <div className="relative w-full h-28 md:h-32">
+        <div className="relative w-full h-28 md:h-32 overflow-visible">
           {/* Visual Glass Tube */}
           <div 
             ref={doneTubeRef}
-            className="absolute inset-0 w-full h-full bg-emerald-50/30 backdrop-blur-xl border border-white/60 rounded-[60px] shadow-inner z-0"
+            className="absolute inset-0 w-full h-full bg-emerald-50/30 backdrop-blur-xl border border-white/60 rounded-[60px] shadow-inner z-0 overflow-hidden"
           ></div>
 
           {/* Interaction/Scroll Layer */}
@@ -180,6 +187,7 @@ const App: React.FC = () => {
                       setModalMode('edit');
                     }}
                     onLongPress={() => handleDeleteTask(task.id)}
+                    onDragStart={handleDragStart}
                     onDragRelease={handleDragRelease}
                   />
                 ))}
