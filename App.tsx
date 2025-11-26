@@ -64,11 +64,20 @@ const App: React.FC = () => {
     const inTodo = point.y >= todoRect.top && point.y <= todoRect.bottom && point.x >= todoRect.left && point.x <= todoRect.right;
     const inDone = point.y >= doneRect.top && point.y <= doneRect.bottom && point.x >= doneRect.left && point.x <= doneRect.right;
 
+    let updatedTask = { ...task };
     if (task.status === 'todo' && inDone) {
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'done' } : t));
+      updatedTask = { ...updatedTask, status: 'done' };
     } else if (task.status === 'done' && inTodo) {
-      setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: 'todo' } : t));
+      updatedTask = { ...updatedTask, status: 'todo' };
     }
+    // Only save the position if it's in a tube, otherwise reset it
+    if (inTodo || inDone) {
+      updatedTask = { ...updatedTask, position: { x: point.x, y: point.y } };
+    } else {
+      updatedTask = { ...updatedTask, position: null };
+    }
+    
+    setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
   };
 
   const toggleStatus = (task: Task) => {
@@ -131,7 +140,7 @@ const App: React.FC = () => {
           <div className="absolute inset-x-0 -top-6 -bottom-6 z-10 flex items-center overflow-x-auto overflow-y-visible tube-scroll px-8 pointer-events-auto">
             <div className="flex items-center gap-6 min-w-max py-8"> {/* extra vertical padding for drag space */}
               <AnimatePresence mode='popLayout'>
-                {todoTasks.map((task) => (
+                {todoTasks.filter(task => !task.position).map((task) => (
                   <TaskBall 
                     key={task.id} 
                     task={task} 
@@ -145,7 +154,7 @@ const App: React.FC = () => {
                     onDragRelease={handleDragRelease}
                   />
                 ))}
-                {todoTasks.length === 0 && (
+                {todoTasks.filter(task => !task.position).length === 0 && (
                   <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
                     className="text-slate-400/60 text-sm font-medium italic ml-4 select-none"
@@ -177,7 +186,7 @@ const App: React.FC = () => {
           <div className="absolute inset-x-0 -top-6 -bottom-6 z-10 flex items-center overflow-x-auto overflow-y-visible tube-scroll px-8 pointer-events-auto">
              <div className="flex items-center gap-6 min-w-max py-8">
               <AnimatePresence mode='popLayout'>
-                {doneTasks.map((task) => (
+                {doneTasks.filter(task => !task.position).map((task) => (
                   <TaskBall 
                     key={task.id} 
                     task={task} 
@@ -191,7 +200,7 @@ const App: React.FC = () => {
                     onDragRelease={handleDragRelease}
                   />
                 ))}
-                 {doneTasks.length === 0 && (
+                 {doneTasks.filter(task => !task.position).length === 0 && (
                   <motion.div 
                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} 
                     className="text-slate-400/60 text-sm font-medium italic ml-4 select-none"
@@ -203,6 +212,24 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* --- POSITIONABLE TASKS --- */}
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 10000 }}>
+        {tasks.filter(task => task.position).map((task) => (
+          <TaskBall 
+            key={task.id} 
+            task={task} 
+            onClick={() => setSelectedTask(task)}
+            onDoubleClick={() => {
+              setEditingTask(task);
+              setModalMode('edit');
+            }}
+            onLongPress={() => handleDeleteTask(task.id)}
+            onDragStart={handleDragStart}
+            onDragRelease={handleDragRelease}
+          />
+        ))}
       </div>
 
       {/* --- MODALS --- */}

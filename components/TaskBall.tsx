@@ -80,7 +80,10 @@ export const TaskBall: React.FC<TaskBallProps> = ({
   };
 
   return (
-    <div className="relative group">
+    <div className={cn(
+      "relative group",
+      task.position ? "absolute pointer-events-auto" : ""
+    )} style={task.position ? { left: task.position.x, top: task.position.y, transform: 'translate(-50%, -50%)' } : undefined}>
       <motion.div
         layoutId={task.id}
         drag
@@ -120,7 +123,7 @@ export const TaskBall: React.FC<TaskBallProps> = ({
             : "bg-gradient-to-b from-emerald-200 to-emerald-400 shadow-emerald-300/50"
         )}
         style={{
-          zIndex: isDragging.current ? 9999 : 'auto'
+          zIndex: isDragging.current ? 100000 : 'auto'
         }}
       >
         {/* Glossy Reflection for Bubble Effect */}
