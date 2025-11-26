@@ -5,6 +5,7 @@ export interface Task {
   emoji: string;
   status: 'todo' | 'done';
   createdAt: number;
+  position?: { x: number; y: number };
 }
 
 export type ModalMode = 'create' | 'edit' | 'closed';
